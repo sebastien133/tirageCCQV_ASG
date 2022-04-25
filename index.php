@@ -1,9 +1,9 @@
 <html>
 <head>
-    <title>Tirage au sort - Conseil Consultatif de Quartiers et de Villages du 28 avril 2022</title>
+    <title>Tirage au sort du 28 avril 2022 - Conseil Consultatif de Quartiers et de Villages</title>
 </head>
 <body>
-<h1>Tirage au sort - Conseil Consultatif de Quartiers et de Villages du 28 avril 2022</h1>
+<h1>Tirage au sort du 28 avril 2022 - Conseil Consultatif de Quartiers et de Villages</h1>
 <form method="post">
     <input type="hidden" name="tirage" value="1" />
     <p>Nombre de personnes tirée au sort : <input type="text" name="qte" value="100" /></p>
@@ -25,6 +25,9 @@ if (isset($_POST["tirage"])) {
     $data = [];
     $result = [];
     $listeQuartiers = ["Quartier Montaigne", "Quartier Saint-Géréon", "Quartier Hopital", "Quartier Nord", "Quartier Coeur de ville", "Villages"];
+    $compteQuartier = [0, 0, 0, 0, 0, 0];
+    $compteParite = [0, 0];
+    $compteAge = ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0];
 
     // Lire le fichier de données en entrées (liste des habitants)
     $file = fopen("tirageAuSort.csv", "r");
@@ -53,8 +56,21 @@ if (isset($_POST["tirage"])) {
     echo "<p>$lineNumber lignes de données en entrée.</p>";
 
     // Effectuer une sélection aléatoire
-    for ($i=0; $i<$_POST["qte"]; $i++) {
-        $result[] = $data[mt_rand(0, count($data) - 1)];
+    $totalLu=0;
+    while (condition() ) {
+        $line = $data[mt_rand(0, count($data) - 1)];
+
+        // Remplacer par MATCH sur un binaire ?
+        if ($_POST["quartier"]) {
+            if ($compteQuartier[array_search($line["quartier"], $listeQuartiers)] < 100) {
+                $compteQuartier[array_search($line["quartier"], $listeQuartiers)]++;
+                $result[] = $line;
+            }
+        } else {
+            $result[] = $line;
+        }
+
+        $totalLu++;
     }
     var_dump($result[1]);
 
@@ -71,4 +87,17 @@ if (isset($_POST["tirage"])) {
     }
 
     fclose($fp);
+}
+
+function condition() {
+    global $_POST, $listeQuartiers, $compteQuartier, $totalLu;
+
+    if (!$_POST["quartier"] && !$_POST["parite"] && !$_POST["age"])
+        return $totalLu < $_POST["qte"];
+
+    if ($_POST["quartier"]) {
+        return array_sum($compteQuartier) < ($_POST["qte"] * count($listeQuartiers));
+    }
+
+    return false;
 }
