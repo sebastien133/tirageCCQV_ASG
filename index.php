@@ -6,7 +6,11 @@
 <h1>Tirage au sort - Conseil Consultatif de Quartiers et de Villages du 28 avril 2022</h1>
 <form method="post">
     <input type="hidden" name="tirage" value="1" />
-    <input type="submit" value="Lancer le tirage" />
+    <p>Nombre de personnes tirée au sort : <input type="text" name="qte" value="100" /></p>
+    <p><input type="checkbox" name="quartier" value="1" checked /> Répartition par quartier des personnes sélectionnées</p>
+    <p><input type="checkbox" name="parite" value="1" /> Parité des personnes sélectionnées ?</p>
+    <p><input type="checkbox" name="age" value="1" /> Répartition par âge (par dizaine d'année) des personnes sélectionnées ?</p>
+    <p><input type="submit" value="Lancer le tirage" /></p>
 </form>
 <?php
 if (isset($_POST["tirage"]))
@@ -20,6 +24,7 @@ ini_set('display_errors', '1');
 if (isset($_POST["tirage"])) {
     $data = [];
     $result = [];
+    $listeQuartiers = ["Quartier Montaigne", "Quartier Saint-Géréon", "Quartier Hopital", "Quartier Nord", "Quartier Coeur de ville", "Villages"];
 
     // Lire le fichier de données en entrées (liste des habitants)
     $file = fopen("tirageAuSort.csv", "r");
@@ -48,7 +53,7 @@ if (isset($_POST["tirage"])) {
     echo "<p>$lineNumber lignes de données en entrée.</p>";
 
     // Effectuer une sélection aléatoire
-    for ($i=0; $i<100; $i++) {
+    for ($i=0; $i<$_POST["qte"]; $i++) {
         $result[] = $data[mt_rand(0, count($data) - 1)];
     }
     var_dump($result[1]);
@@ -61,8 +66,7 @@ if (isset($_POST["tirage"])) {
     // Ligne de titre
     fputcsv($fp, ["Civilite", "NOM","Nom_usage","Prenoms","date_nais","num","voie","bat","app","compl_adresse","code_postal","ville","Quartier"]);
 
-    foreach($result as $line)
-    {
+    foreach($result as $line) {
         fputcsv($fp, $line);
     }
 
