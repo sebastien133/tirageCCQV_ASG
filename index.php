@@ -7,9 +7,9 @@
 <form method="post">
     <input type="hidden" name="tirage" value="1" />
     <p>Nombre de personnes tirée au sort : <input type="text" name="qte" value="100" /></p>
-    <p><input type="checkbox" name="quartier" value="1" checked /> Répartition par quartier des personnes sélectionnées</p>
-    <p><input type="checkbox" name="parite" value="1" /> Parité des personnes sélectionnées ?</p>
-    <p><input type="checkbox" name="age" value="1" /> Répartition par âge (par dizaine d'année) des personnes sélectionnées ?</p>
+    <p><input type="checkbox" name="quartier" value="1" checked /> Répartition par quartier (nombre de personne total multipliée par le nombre de quartiers)</p>
+    <p><input type="checkbox" name="parite" value="1" /> Parité ?</p>
+<!--    <p><input type="checkbox" name="age" value="1" /> Répartition par classe d'âge ?</p>-->
     <p><input type="submit" value="Lancer le tirage" /></p>
 </form>
 <?php
@@ -53,26 +53,30 @@ if (isset($_POST["tirage"])) {
         $data[] = $ligne;
     }
     fclose($file);
-    echo "<p>$lineNumber lignes de données en entrée.</p>";
+    echo "<p>" . count($data) . " lignes de données en entrée.</p>";
 
     // Effectuer une sélection aléatoire
-    $totalLu=0;
+    $totalAjoute=0;
     while (condition() ) {
-        $line = $data[mt_rand(0, count($data) - 1)];
+        $resultatTirage = mt_rand(0, count($data) - 1);
+        if (!isset($data[$resultatTirage]))
+            continue;
+
+        $line = $data[$resultatTirage];
 
         // Remplacer par MATCH sur un binaire ?
         if ($_POST["quartier"]) {
             if ($compteQuartier[array_search($line["quartier"], $listeQuartiers)] < 100) {
                 $compteQuartier[array_search($line["quartier"], $listeQuartiers)]++;
-                $result[] = $line;
+                ajouterResultat($resultatTirage);
             }
         } else {
-            $result[] = $line;
+            ajouterResultat($resultatTirage);
         }
-
-        $totalLu++;
     }
-    var_dump($result[1]);
+
+    echo "<p>" . count($data) . " lignes de données non-sélectionnées.</p>";
+    echo "<pre>Première ligne : "; var_dump($result[1]); echo "</pre>";
 
     // Enregistrer dans le fichier resultat.csv
     $fp = fopen('results/resultat.csv', 'w');
@@ -90,14 +94,22 @@ if (isset($_POST["tirage"])) {
 }
 
 function condition() {
-    global $_POST, $listeQuartiers, $compteQuartier, $totalLu;
+    global $_POST, $listeQuartiers, $compteQuartier, $totalAjoute;
 
     if (!$_POST["quartier"] && !$_POST["parite"] && !$_POST["age"])
-        return $totalLu < $_POST["qte"];
+        return $totalAjoute < $_POST["qte"];
 
     if ($_POST["quartier"]) {
         return array_sum($compteQuartier) < ($_POST["qte"] * count($listeQuartiers));
     }
 
     return false;
+}
+function ajouterResultat($resultatTirage) {
+    global $data, $result, $totalAjoute;
+
+    $result[] = $data[$resultatTirage];
+    unset($data[$resultatTirage]);
+
+    $totalAjoute++;
 }
