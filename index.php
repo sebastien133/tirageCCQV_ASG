@@ -16,9 +16,9 @@
 <form method="post">
     <input type="hidden" name="tirage" value="1" />
     <p>Nombre de personnes tirée au sort : <input type="text" name="qte" value="100" /></p>
-    <p><input type="checkbox" name="quartier" value="1" checked /> Répartition par quartier (nombre de personne total multipliée par le nombre de quartiers)</p>
-    <p><input type="checkbox" name="parite" value="1" /> Parité ?</p>
-<!--    <p><input type="checkbox" name="age" value="1" /> Répartition par classe d'âge ?</p>-->
+    <p><input id="quartier" type="checkbox" name="quartier" value="1"<?php if (isset($_POST["quartier"])) echo " checked"; ?> /> <label for="quartier">Répartition par quartier (nombre de personne total multipliée par le nombre de quartiers)</label></p>
+    <p><input id="parite" type="checkbox" name="parite" value="1"<?php if (isset($_POST["parite"])) echo " checked"; ?> /> <label for="parite">Parité ?</label></p>
+    <p><input id="age" type="checkbox" name="age" value="1"<?php if (isset($_POST["age"])) echo " checked"; ?> /> <label for="age">Répartition par classe d'âge ?</label></p>
     <p><input type="submit" value="Lancer le tirage" /></p>
 </form>
 <?php
@@ -35,16 +35,15 @@ if (isset($_POST["tirage"])) {
     $result = [];
     $listeQuartiers = ["Quartier Montaigne", "Quartier Saint-Géréon", "Quartier Hopital", "Quartier Nord", "Quartier Coeur de ville", "Villages"];
     $compteQuartier = [0, 0, 0, 0, 0, 0];
-    $compteParite = [0, 0];
-    $comptePariteQuartier = [['m' => 0, 'f' => 0,], ['m' => 0, 'f' => 0,], ['m' => 0, 'f' => 0,], ['m' => 0, 'f' => 0,], ['m' => 0, 'f' => 0,], ['m' => 0, 'f' => 0,]];
-    $compteAgeQuartier = [
-            0 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
-            1 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
-            2 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
-            3 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
-            4 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
-            5 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
-    ];
+    $compteParite = ['m' => 0, 'f' => 0,];
+    $compteAge = ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0];
+
+    $comptePariteQuartier = [];
+    $compteAgeQuartier = [];
+    for ($i=0; $i<count($listeQuartiers); $i++) {
+        $comptePariteQuartier[] = $compteParite;
+        $compteAgeQuartier[] = $compteAge;
+    }
 
     // Lire le fichier de données en entrées (liste des habitants)
     $file = fopen("tirageAuSort.csv", "r");
@@ -89,7 +88,15 @@ if (isset($_POST["tirage"])) {
                 $quartier = array_search($line["quartier"], $listeQuartiers);
 
                 // Vérifie le critère de parité si sélectionné
-                if (isset($_POST['parite']) && $comptePariteQuartier[$quartier][getSexe($line)] >= ($_POST['qte'] / count($compteParite)))
+                if (isset($_POST['parite']) &&
+                    $comptePariteQuartier[$quartier][getSexe($line)] >= ($_POST['qte'] / count($compteParite))
+                )
+                    continue;
+
+                // Vérifie le critère de classe d'âge si sélectionné
+                if (isset($_POST['age']) &&
+                    $compteAgeQuartier[$quartier][getClasseAge($line)] >= ($_POST['qte'] / count($compteAge))
+                )
                     continue;
 
                 $compteQuartier[$quartier]++;
@@ -100,6 +107,10 @@ if (isset($_POST["tirage"])) {
         } else {
             // Vérifie le critère de parité si sélectionné
             if (isset($_POST['parite']) && $compteParite[getSexe($line)] >= ($_POST['qte'] / count($compteParite)))
+                continue;
+
+            // Vérifie le critère de classe d'âge si sélectionné
+            if (isset($_POST['age']) && $compteAgeQuartier[getClasseAge($line)] >= ($_POST['qte'] / count($compteAge)))
                 continue;
 
             ajouterResultat($resultatTirage);
@@ -113,12 +124,12 @@ if (isset($_POST["tirage"])) {
         echo '<th>Nbre de personne</th>';
         echo '<th>Homme</th>';
         echo '<th>Femme</th>';
-        echo "<th>" . "- de 30 ans"  . "</th>";
-        echo "<th>" . "- de 40 ans" . "</th>";
-        echo "<th>" . "- de 50 ans" . "</th>";
-        echo "<th>" . "- de 60 ans" . "</th>";
-        echo "<th>" . "- de 70 ans" . "</th>";
-        echo "<th>" . "+ de 70 ans"  . "</th>";
+
+        $ages = array_keys($compteAge);
+        for ($i=0; $i<count($compteAge); $i++) {
+            echo "<th>" . $ages[$i] . "</th>";
+        }
+
         echo "</tr>";
 
         for ($i=0; $i<count($compteQuartier); $i++) {
@@ -126,12 +137,11 @@ if (isset($_POST["tirage"])) {
             echo "<td>" . $compteQuartier[$i] . "</td>";
             echo "<td>" . $comptePariteQuartier[$i]['m'] . "</td>";
             echo "<td>" . $comptePariteQuartier[$i]['f'] . "</td>";
-            echo "<td>" . $compteAgeQuartier[$i]["- de 30 ans"]  . "</td>";
-            echo "<td>" . $compteAgeQuartier[$i]["- de 40 ans"] . "</td>";
-            echo "<td>" . $compteAgeQuartier[$i]["- de 50 ans"] . "</td>";
-            echo "<td>" . $compteAgeQuartier[$i]["- de 60 ans"] . "</td>";
-            echo "<td>" . $compteAgeQuartier[$i]["- de 70 ans"] . "</td>";
-            echo "<td>" . $compteAgeQuartier[$i]["+ de 70 ans"]  . "</td>";
+
+            for ($j=0; $j<count($compteAge); $j++) {
+                echo "<td>" . $compteAgeQuartier[$i][$ages[$j]] . "</td>";
+            }
+
             echo "</tr>";
         }
         echo '</table>';
