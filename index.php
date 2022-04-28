@@ -1,6 +1,15 @@
 <html>
 <head>
     <title>Tirage au sort du 28 avril 2022 - Conseil Consultatif de Quartiers et de Villages</title>
+    <style>
+        .center {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        table td {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 <h1>Tirage au sort du 28 avril 2022 - Conseil Consultatif de Quartiers et de Villages</h1>
@@ -27,7 +36,15 @@ if (isset($_POST["tirage"])) {
     $listeQuartiers = ["Quartier Montaigne", "Quartier Saint-Géréon", "Quartier Hopital", "Quartier Nord", "Quartier Coeur de ville", "Villages"];
     $compteQuartier = [0, 0, 0, 0, 0, 0];
     $compteParite = [0, 0];
-    $compteAge = ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0];
+    $comptePariteQuartier = [['m' => 0, 'f' => 0,], ['m' => 0, 'f' => 0,], ['m' => 0, 'f' => 0,], ['m' => 0, 'f' => 0,], ['m' => 0, 'f' => 0,], ['m' => 0, 'f' => 0,]];
+    $compteAgeQuartier = [
+            0 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
+            1 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
+            2 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
+            3 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
+            4 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
+            5 => ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0],
+    ];
 
     // Lire le fichier de données en entrées (liste des habitants)
     $file = fopen("tirageAuSort.csv", "r");
@@ -65,9 +82,11 @@ if (isset($_POST["tirage"])) {
         $line = $data[$resultatTirage];
 
         // Remplacer par MATCH sur un binaire ?
-        if ($_POST["quartier"]) {
+        if (isset($_POST["quartier"])) {
             if ($compteQuartier[array_search($line["quartier"], $listeQuartiers)] < 100) {
                 $compteQuartier[array_search($line["quartier"], $listeQuartiers)]++;
+                $comptePariteQuartier[array_search($line["quartier"], $listeQuartiers)][getSexe($line)]++;
+                $compteAgeQuartier[array_search($line["quartier"], $listeQuartiers)][getClasseAge($line)]++;
                 ajouterResultat($resultatTirage);
             }
         } else {
@@ -76,6 +95,36 @@ if (isset($_POST["tirage"])) {
     }
 
     echo "<p>" . count($data) . " lignes de données non-sélectionnées.</p>";
+
+    if (isset($_POST['quartier'])) {
+        echo '<table border="1" class="center"><tr><th>Quartier</th>';
+        echo '<th>Nbre de personne</th>';
+        echo '<th>Homme</th>';
+        echo '<th>Femme</th>';
+        echo "<th>" . "- de 30 ans"  . "</th>";
+        echo "<th>" . "- de 40 ans" . "</th>";
+        echo "<th>" . "- de 50 ans" . "</th>";
+        echo "<th>" . "- de 60 ans" . "</th>";
+        echo "<th>" . "- de 70 ans" . "</th>";
+        echo "<th>" . "+ de 70 ans"  . "</th>";
+        echo "</tr>";
+
+        for ($i=0; $i<count($compteQuartier); $i++) {
+            echo "<tr><td>" . $listeQuartiers[$i] . "</td>";
+            echo "<td>" . $compteQuartier[$i] . "</td>";
+            echo "<td>" . $comptePariteQuartier[$i]['m'] . "</td>";
+            echo "<td>" . $comptePariteQuartier[$i]['f'] . "</td>";
+            echo "<td>" . $compteAgeQuartier[$i]["- de 30 ans"]  . "</td>";
+            echo "<td>" . $compteAgeQuartier[$i]["- de 40 ans"] . "</td>";
+            echo "<td>" . $compteAgeQuartier[$i]["- de 50 ans"] . "</td>";
+            echo "<td>" . $compteAgeQuartier[$i]["- de 60 ans"] . "</td>";
+            echo "<td>" . $compteAgeQuartier[$i]["- de 70 ans"] . "</td>";
+            echo "<td>" . $compteAgeQuartier[$i]["+ de 70 ans"]  . "</td>";
+            echo "</tr>";
+        }
+        echo '</table>';
+    }
+
     echo "<pre>Première ligne : "; var_dump($result[1]); echo "</pre>";
 
     // Enregistrer dans le fichier resultat.csv
@@ -96,15 +145,16 @@ if (isset($_POST["tirage"])) {
 function condition() {
     global $_POST, $listeQuartiers, $compteQuartier, $totalAjoute;
 
-    if (!$_POST["quartier"] && !$_POST["parite"] && !$_POST["age"])
+    if (!isset($_POST["quartier"]) && !isset($_POST["parite"]) && !isset($_POST["age"]))
         return $totalAjoute < $_POST["qte"];
 
-    if ($_POST["quartier"]) {
+    if (isset($_POST["quartier"])) {
         return array_sum($compteQuartier) < ($_POST["qte"] * count($listeQuartiers));
     }
 
     return false;
 }
+
 function ajouterResultat($resultatTirage) {
     global $data, $result, $totalAjoute;
 
@@ -112,4 +162,22 @@ function ajouterResultat($resultatTirage) {
     unset($data[$resultatTirage]);
 
     $totalAjoute++;
+}
+
+function getSexe($line) {
+    return $line['civilite'] === 'M.'?'m':'f';
+}
+
+function getClasseAge($line) {
+    $now = date_create(date("Y-m-d"));
+    $date_naiss = strlen($line['date_naiss']) === 4 ? date_create_from_format("d/m/Y", "01/01/" . $line['date_naiss']) : date_create_from_format("d/m/Y", $line['date_naiss']);
+    $age = date_diff($date_naiss, $now)->format('%y');
+    return match(true) {
+        $age < 30 => '- de 30 ans',
+        $age < 40 => '- de 40 ans',
+        $age < 50 => '- de 50 ans',
+        $age < 60 => '- de 60 ans',
+        $age < 70 => '- de 70 ans',
+        default => '+ de 70 ans',
+    };
 }
