@@ -82,7 +82,6 @@ if (isset($_POST["tirage"])) {
 
         $line = $data[$resultatTirage];
 
-        // Remplacer par MATCH sur un binaire ?
         if (isset($_POST["quartier"])) {
             if ($compteQuartier[array_search($line["quartier"], $listeQuartiers)] < $_POST['qte']) {
                 $quartier = array_search($line["quartier"], $listeQuartiers);
@@ -110,9 +109,10 @@ if (isset($_POST["tirage"])) {
                 continue;
 
             // Vérifie le critère de classe d'âge si sélectionné
-            if (isset($_POST['age']) && $compteAgeQuartier[getClasseAge($line)] >= ($_POST['qte'] / count($compteAge)))
+            if (isset($_POST['age']) && $compteAge[getClasseAge($line)] >= ($_POST['qte'] / count($compteAge)))
                 continue;
-
+            $compteParite[getSexe($line)]++;
+            $compteAge[getClasseAge($line)]++;
             ajouterResultat($resultatTirage);
         }
     }
@@ -147,7 +147,7 @@ if (isset($_POST["tirage"])) {
         echo '</table>';
     }
 
-    echo "<pre>Première ligne : "; var_dump($result[1]); echo "</pre>";
+    echo "<pre>Première ligne : "; var_dump($result[0]); echo "</pre>";
 
     // Enregistrer dans le fichier resultat.csv
     $fp = fopen('results/resultat.csv', 'w');
@@ -167,14 +167,11 @@ if (isset($_POST["tirage"])) {
 function condition() {
     global $_POST, $listeQuartiers, $compteQuartier, $totalAjoute;
 
-    if (!isset($_POST["quartier"]) && !isset($_POST["parite"]) && !isset($_POST["age"]))
-        return $totalAjoute < $_POST["qte"];
-
     if (isset($_POST["quartier"])) {
         return array_sum($compteQuartier) < ($_POST["qte"] * count($listeQuartiers));
+    } else {
+        return $totalAjoute < $_POST["qte"];
     }
-
-    return false;
 }
 
 function ajouterResultat($resultatTirage) {
