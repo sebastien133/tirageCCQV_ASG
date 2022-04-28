@@ -23,7 +23,7 @@
 </form>
 <?php
 if (isset($_POST["tirage"]))
-    echo "<a href=\"resultat.csv\">Télécharger le résultat</a>";
+    echo "<a href=\"/results/resultat.csv\">Télécharger le résultat</a>";
 ?>
 </body>
 </html>
@@ -76,6 +76,8 @@ if (isset($_POST["tirage"])) {
     $totalAjoute=0;
     while (condition() ) {
         $resultatTirage = mt_rand(0, count($data) - 1);
+
+        // Evite les doublons
         if (!isset($data[$resultatTirage]))
             continue;
 
@@ -83,13 +85,23 @@ if (isset($_POST["tirage"])) {
 
         // Remplacer par MATCH sur un binaire ?
         if (isset($_POST["quartier"])) {
-            if ($compteQuartier[array_search($line["quartier"], $listeQuartiers)] < 100) {
-                $compteQuartier[array_search($line["quartier"], $listeQuartiers)]++;
-                $comptePariteQuartier[array_search($line["quartier"], $listeQuartiers)][getSexe($line)]++;
-                $compteAgeQuartier[array_search($line["quartier"], $listeQuartiers)][getClasseAge($line)]++;
+            if ($compteQuartier[array_search($line["quartier"], $listeQuartiers)] < $_POST['qte']) {
+                $quartier = array_search($line["quartier"], $listeQuartiers);
+
+                // Vérifie le critère de parité si sélectionné
+                if (isset($_POST['parite']) && $comptePariteQuartier[$quartier][getSexe($line)] >= ($_POST['qte'] / count($compteParite)))
+                    continue;
+
+                $compteQuartier[$quartier]++;
+                $comptePariteQuartier[$quartier][getSexe($line)]++;
+                $compteAgeQuartier[$quartier][getClasseAge($line)]++;
                 ajouterResultat($resultatTirage);
             }
         } else {
+            // Vérifie le critère de parité si sélectionné
+            if (isset($_POST['parite']) && $compteParite[getSexe($line)] >= ($_POST['qte'] / count($compteParite)))
+                continue;
+
             ajouterResultat($resultatTirage);
         }
     }
