@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>Tirage au sort du 28 avril 2022 - Conseil Consultatif de Quartiers et de Villages</title>
+    <title>Tirage au sort du 18 février 2024 - Conseil Consultatif de Quartiers et de Villages</title>
     <style>
         .center {
             margin-left: auto;
@@ -12,10 +12,10 @@
     </style>
 </head>
 <body>
-<h1>Tirage au sort du 28 avril 2022 - Conseil Consultatif de Quartiers et de Villages</h1>
+<h1>Tirage au sort du 18 février 2024 - Conseil Consultatif de Quartiers et de Villages</h1>
 <form method="post">
     <input type="hidden" name="tirage" value="1" />
-    <p>Nombre de personnes tirée au sort : <input type="text" name="qte" value="100" /></p>
+    <p>Nombre de personnes tirée au sort : <input type="text" name="qte" value="20" /></p>
     <p><input id="quartier" type="checkbox" name="quartier" value="1"<?php if (isset($_POST["quartier"])) echo " checked"; ?> /> <label for="quartier">Répartition par quartier (nombre de personne total multipliée par le nombre de quartiers)</label></p>
     <p><input id="parite" type="checkbox" name="parite" value="1"<?php if (isset($_POST["parite"])) echo " checked"; ?> /> <label for="parite">Parité ?</label></p>
     <p><input id="age" type="checkbox" name="age" value="1"<?php if (isset($_POST["age"])) echo " checked"; ?> /> <label for="age">Répartition par classe d'âge ?</label></p>
@@ -33,8 +33,8 @@ ini_set('display_errors', '1');
 if (isset($_POST["tirage"])) {
     $data = [];
     $result = [];
-    $listeQuartiers = ["Quartier Montaigne", "Quartier Saint-Géréon", "Quartier Hopital", "Quartier Nord", "Quartier Coeur de ville", "Villages"];
-    $compteQuartier = [0, 0, 0, 0, 0, 0];
+    $listeQuartiers = ["Quartier Saint-Géréon", "Quartier Hopital", "Quartier Nord", "Quartier Coeur de ville", "Villages"];
+    $compteQuartier = [0, 0, 0, 0, 0];
     $compteParite = ['m' => 0, 'f' => 0,];
     $compteAge = ["- de 30 ans" => 0, "- de 40 ans" => 0, "- de 50 ans" => 0, "- de 60 ans" => 0, "- de 70 ans" => 0, "+ de 70 ans" => 0];
 
@@ -53,19 +53,17 @@ if (isset($_POST["tirage"])) {
             continue;
 
         $ligne = array();
-        $ligne["civilite"] = $line[0];
-        $ligne["nom"] = $line[1];
-        $ligne["nom_usage"] = $line[2];
-        $ligne["prenoms"] = $line[3];
+        $ligne["nom"] = $line[0];
+        $ligne["nom_usage"] = $line[1];
+        $ligne["prenoms"] = $line[2];
+        $ligne["civilite"] = $line[3];
         $ligne["date_naiss"] = $line[4];
         $ligne["num"] = $line[5];
         $ligne["voie"] = $line[6];
-        $ligne["bat"] = $line[7];
-        $ligne["app"] = $line[8];
         $ligne["compl_adr"] = $line[9];
-        $ligne["cp"] = $line[10];
-        $ligne["ville"] = $line[11];
-        $ligne["quartier"] = $line[12];
+        $ligne["cp"] = $line[8];
+        $ligne["ville"] = $line[9];
+        $ligne["quartier"] = $line[10];
         $data[] = $ligne;
     }
     fclose($file);
